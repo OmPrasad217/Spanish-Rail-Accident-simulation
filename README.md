@@ -14,7 +14,10 @@ A single-file, interactive educational visualization of the rear-end collision r
 - **Play / Pause**, **Restart**, timeline scrubbing and 0.5×–4× playback speed.
 - Camera presets: aerial drone, ground tracking, front-facing, side tracking, wide overview, and free look.
 - In free look, drag to orbit, use the wheel or +/- buttons to zoom, and use **W/A/S/D** (or arrow keys) to navigate; **Q/E** move vertically.
-- Toggle train labels, catenary/trackside infrastructure, and vegetation. Fullscreen is available from the control bar; **Space**, **R**, and **F** are keyboard shortcuts.
+- Use **Hide UI** in the top bar to clear the screen; click **Show controls**, press **H**, or press **Escape** to restore the interface. Fullscreen is separate and can be combined with the clean view.
+- Toggle train labels, catenary/trackside infrastructure, and vegetation. **Space**, **R**, and **F** are playback, restart and fullscreen shortcuts.
+
+The train models use smooth tapered cab shells, reflective paint, layered liveries, framed windows, door hardware, roof HVAC and pantographs, inter-car bellows, underbody equipment, profile-shaped wheels, and animated bogies/wheels. They are detailed procedural interpretations rather than photogrammetry or imported model files.
 
 ## Evidence and limits
 
