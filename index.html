@@ -32,7 +32,7 @@
     button, select, input { font: inherit; }
     button { color: inherit; }
     .app { position: fixed; inset: 0; overflow: hidden; background: #aeb9b2; isolation: isolate; }
-    #sceneView { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: linear-gradient(#bac9c9 0%, #d5d8c8 51%, #777e59 100%); }
+    #sceneView { position: absolute; inset: 0; z-index: 0; overflow: hidden; touch-action: none; background: linear-gradient(#bac9c9 0%, #d5d8c8 51%, #777e59 100%); }
     #sceneView canvas { display: block; width: 100%; height: 100%; outline: none; }
     .fallback-canvas { position: absolute; inset: 0; }
     .scene-vignette { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, rgba(4,12,17,.45) 0%, rgba(4,12,17,.08) 43%, transparent 72%), linear-gradient(0deg, rgba(4,11,15,.54) 0%, transparent 31%, rgba(4,11,15,.18) 100%); }
@@ -94,6 +94,24 @@
     .tool-button:hover { background: rgba(26,39,43,.92); border-color: rgba(230,167,93,.55); transform: translateY(-1px); }
     .tool-button svg { width: 15px; height: 15px; }
     .zoom-readout { color: rgba(241,244,241,.52); font-size: 8px; text-align: center; font-variant-numeric: tabular-nums; }
+    .ui-visibility-button { height: 32px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 11px; border: 1px solid rgba(235,241,238,.18); border-radius: 9px; background: rgba(8,17,24,.56); color: rgba(239,243,240,.82); font-size: 9px; cursor: pointer; transition: border-color .18s, background .18s, color .18s; }
+    .ui-visibility-button:hover { border-color: rgba(230,167,93,.58); color: #fff; background: rgba(230,167,93,.11); }
+    .ui-visibility-button svg { width: 15px; height: 15px; }
+    .restore-ui-button { display: none; position: absolute; z-index: 14; top: 18px; left: 18px; align-items: center; gap: 9px; height: 42px; padding: 0 14px; border: 1px solid rgba(242,238,222,.31); border-radius: 12px; background: rgba(8,17,23,.82); color: rgba(245,244,235,.94); box-shadow: 0 8px 32px rgba(0,0,0,.27); backdrop-filter: blur(14px); font-size: 10px; font-weight: 600; letter-spacing: .04em; cursor: pointer; }
+    .restore-ui-button:hover { border-color: rgba(230,167,93,.72); background: rgba(18,29,33,.94); }
+    .restore-ui-button svg { width: 16px; height: 16px; color: var(--orange); }
+    .restore-ui-button kbd { margin-left: 4px; padding: 3px 5px; border: 1px solid rgba(239,243,238,.17); border-radius: 5px; color: rgba(235,241,236,.58); font: inherit; font-size: 8px; }
+    .app.ui-hidden .topbar,
+    .app.ui-hidden .briefing,
+    .app.ui-hidden .mode-note,
+    .app.ui-hidden .view-tools,
+    .app.ui-hidden .camera-hint,
+    .app.ui-hidden .lower-caption,
+    .app.ui-hidden .bottom-dock,
+    .app.ui-hidden .toast { opacity: 0; visibility: hidden; pointer-events: none; }
+    .app.ui-hidden .restore-ui-button { display: inline-flex; }
+    .app.ui-hidden .scene-vignette { background: transparent; }
+    .app.ui-hidden .scene-grain { opacity: 0; }
     .camera-hint { position: absolute; z-index: 2; left: 50%; top: 91px; transform: translateX(-50%); padding: 7px 10px; border: 1px solid rgba(255,255,255,.13); border-radius: 999px; background: rgba(7,14,19,.54); color: rgba(239,243,240,.63); font-size: 8px; letter-spacing: .08em; white-space: nowrap; backdrop-filter: blur(8px); pointer-events: none; }
     .camera-hint span { color: var(--orange); }
     .bottom-dock { position: absolute; z-index: 5; left: 378px; right: 28px; bottom: 24px; padding: 13px 16px 12px; border: 1px solid rgba(232,239,236,.17); border-radius: 15px; background: var(--panel-strong); box-shadow: var(--shadow); backdrop-filter: blur(18px); }
@@ -174,7 +192,10 @@
       .brand-mark { width: 31px; height: 31px; }
       .brand-title { font-size: 9px; }
       .brand-sub { font-size: 8px; }
+      .top-meta { gap: 8px; }
       .top-meta-note { display: none; }
+      .ui-visibility-button { width: 33px; height: 32px; padding: 0; }
+      .ui-visibility-button span { display: none; }
       .status-pill { padding: 7px 8px; font-size: 7px; letter-spacing: .1em; }
       .briefing { top: 75px; left: 12px; right: 12px; width: auto; max-height: min(32vh, 250px); padding: 12px 13px; border-radius: 13px; }
       .title-row { margin-top: 7px; }
@@ -226,6 +247,7 @@
     }
     @media (max-width: 420px) {
       .briefing { max-height: 30vh; }
+      .restore-ui-button { top: 12px; left: 12px; height: 38px; }
       .file-number { font-size: 7px; }
       .status-pill { max-width: 140px; overflow: hidden; }
       .camera-hint { display: none; }
@@ -257,6 +279,10 @@
       </div>
       <div class="top-meta">
         <div class="top-meta-note">Public-source snapshot · AITAT first 24 hours</div>
+        <button class="ui-visibility-button" id="hideUiButton" type="button" aria-label="Hide all interface controls" aria-pressed="false" title="Hide all interface controls · press H to restore">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M2 10s2.8-4.7 7-4.7c1.2 0 2.3.3 3.2.8M18 10s-2.8 4.7-7 4.7c-1.2 0-2.3-.3-3.2-.8M3 17 17 3" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.2 8.2a2.55 2.55 0 0 0 3.6 3.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span>Hide UI</span>
+        </button>
         <div class="status-pill"><span class="status-dot"></span><span id="renderStatus">Preparing scene</span></div>
       </div>
     </header>
@@ -287,7 +313,7 @@
         <div class="facts-body">
           <p><strong>AITAT's first-day note</strong> identifies Iryo 6076 (Hitachi ETR1000 109.015) and Renfe AVE 2080 (Siemens 103.006 variant), both eight-car sets. It reports Iryo stopped at entry signal E242 when the Renfe train struck it from behind.</p>
           <p>The first-day note says the investigation was at an early evidence-gathering stage and left possible causes open. This simulation assigns <strong>no cause</strong> and asserts no speed, approach time or physical scale.</p>
-          <p>Coach geometry and liveries are procedural visual interpretations, not photogrammetry. Track position, countryside, signal marker, spacing and post-impact arrangement are schematic; the final tableau is not an exact damage map.</p>
+          <p>The high-detail procedural train models include smoothed aerodynamic cabs, reflective painted shells, framed glazing, doors, roof equipment, pantographs, gangways, detailed bogies and rolling wheel profiles; they are still visual interpretations, not photogrammetry. Track position, countryside, signal marker, spacing and post-impact arrangement are schematic; the final tableau is not an exact damage map.</p>
           <a class="source-link" href="https://www.transportes.gob.es/organos-colegiados/ciaf/investigaciones-en-curso/expediente-1462026" target="_blank" rel="noopener noreferrer">AITAT case file · 146/2026 <svg viewBox="0 0 12 12" fill="none"><path d="M4.4 2.2h5.4v5.4M9.5 2.5 3 9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
           <a class="source-link" href="https://www.transportes.gob.es/recursos_mfom/paginabasica/recursos/note_urda_accident_-_available_information_after_first_24_hours.pdf" target="_blank" rel="noopener noreferrer">AITAT first-24-hour note <svg viewBox="0 0 12 12" fill="none"><path d="M4.4 2.2h5.4v5.4M9.5 2.5 3 9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
         </div>
@@ -305,6 +331,10 @@
       <div class="zoom-readout" id="zoomReadout">100%</div>
       <button class="tool-button" id="zoomOut" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 20 20" fill="none"><circle cx="8.6" cy="8.6" r="5.8" stroke="currentColor" stroke-width="1.3"/><path d="m13 13 4.2 4.2M5.8 8.6h5.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
     </div>
+    <button class="restore-ui-button" id="restoreUiButton" type="button" aria-label="Show all interface controls" title="Show all controls · H or Escape">
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M1.8 10s3-5 8.2-5 8.2 5 8.2 5-3 5-8.2 5-8.2-5-8.2-5Z" stroke="currentColor" stroke-width="1.3"/><circle cx="10" cy="10" r="2.2" stroke="currentColor" stroke-width="1.3"/><path d="M3.2 16.8 16.8 3.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      <span>Show controls</span><kbd>H</kbd>
+    </button>
     <div class="camera-hint"><span>FREE LOOK</span> · drag to orbit · wheel to zoom · WASD to move</div>
 
     <div class="lower-caption">Illustrative environment · no exact site survey</div>
@@ -424,6 +454,7 @@
       cameraMode: 'overview',
       zoom: 1,
       rendererKind: 'starting',
+      uiHidden: false,
       lastFrame: 0,
       toastTimer: null
     };
@@ -495,6 +526,13 @@
       state.toastTimer = setTimeout(() => toast.classList.remove('visible'), 2500);
     }
 
+    function setUIHidden(hidden) {
+      state.uiHidden = Boolean(hidden);
+      app.classList.toggle('ui-hidden', state.uiHidden);
+      $('hideUiButton').setAttribute('aria-pressed', String(state.uiHidden));
+      requestAnimationFrame(() => $(state.uiHidden ? 'restoreUiButton' : 'hideUiButton').focus());
+    }
+
     // Canvas textures keep the complete scene procedural and asset-free.
     function makeTextureCanvas(kind, seedValue = 1) {
       const canvas = document.createElement('canvas');
@@ -532,6 +570,72 @@
         ctx.globalAlpha = 1;
       }
       return canvas;
+    }
+
+    function makePaintTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#f5f4ef';
+      ctx.fillRect(0, 0, 256, 256);
+      const gradient = ctx.createLinearGradient(0, 0, 0, 256);
+      gradient.addColorStop(0, 'rgba(255,255,255,.22)');
+      gradient.addColorStop(.46, 'rgba(255,255,255,.04)');
+      gradient.addColorStop(1, 'rgba(71,77,75,.08)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 256, 256);
+      let seed = 74021;
+      const random = () => {
+        seed = (1664525 * seed + 1013904223) >>> 0;
+        return seed / 4294967296;
+      };
+      for (let i = 0; i < 2200; i++) {
+        const alpha = .012 + random() * .035;
+        ctx.fillStyle = random() > .5 ? `rgba(255,255,255,${alpha})` : `rgba(39,47,46,${alpha})`;
+        const w = .3 + random() * 1.5;
+        ctx.fillRect(random() * 256, random() * 256, w, .35 + random() * .65);
+      }
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    function makeEnvironmentCube() {
+      const faceColors = [
+        ['#9fb3b4', '#d8d4c6'], ['#a7b7b5', '#c9c8b6'],
+        ['#a9c0c6', '#d7e2df'], ['#776e59', '#4e493e'],
+        ['#a5bac0', '#d8d5c8'], ['#9cafb3', '#d6d3c6']
+      ];
+      const faces = faceColors.map((colors, faceIndex) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 128);
+        gradient.addColorStop(0, colors[0]);
+        gradient.addColorStop(.62, colors[0]);
+        gradient.addColorStop(.64, colors[1]);
+        gradient.addColorStop(1, colors[1]);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 128, 128);
+        if (faceIndex !== 2 && faceIndex !== 3) {
+          const glow = ctx.createRadialGradient(88, 31, 1, 88, 31, 52);
+          glow.addColorStop(0, 'rgba(255,247,226,.72)');
+          glow.addColorStop(1, 'rgba(255,247,226,0)');
+          ctx.fillStyle = glow;
+          ctx.fillRect(32, 0, 96, 96);
+          ctx.fillStyle = 'rgba(255,255,255,.18)';
+          ctx.fillRect(18, 48, 8, 52);
+          ctx.fillRect(40, 55, 3, 42);
+        }
+        return canvas;
+      });
+      const cube = new THREE.CubeTexture(faces);
+      cube.colorSpace = THREE.SRGBColorSpace;
+      cube.mapping = THREE.CubeReflectionMapping;
+      cube.needsUpdate = true;
+      return cube;
     }
 
     function makeLogoTexture(brand) {
@@ -975,17 +1079,17 @@
           { z: -half, w: 1.34, b: bodyBottom, t: bodyTop },
           { z: -half + .35, w: mainWidth, b: bodyBottom, t: bodyTop },
           { z: 5.8, w: mainWidth, b: bodyBottom, t: bodyTop },
-          { z: 8.1, w: 1.38, b: 1.39, t: 4.87 },
-          { z: 10.0, w: 1.05, b: 1.58, t: 4.57 },
-          { z: 11.5, w: .60, b: 1.82, t: 4.22 },
-          { z: half, w: .14, b: 2.05, t: 3.94 }
+          { z: 8.1, w: 1.41, b: 1.37, t: 4.91 },
+          { z: 10.0, w: 1.30, b: 1.52, t: 4.73 },
+          { z: 11.5, w: 1.12, b: 1.77, t: 4.49 },
+          { z: half, w: .96, b: 1.98, t: 4.25 }
         ];
       } else if (type === 'rear') {
         rings = [
-          { z: -half, w: .14, b: 2.05, t: 3.94 },
-          { z: -11.5, w: .60, b: 1.82, t: 4.22 },
-          { z: -10.0, w: 1.05, b: 1.58, t: 4.57 },
-          { z: -8.1, w: 1.38, b: 1.39, t: 4.87 },
+          { z: -half, w: .96, b: 1.98, t: 4.25 },
+          { z: -11.5, w: 1.12, b: 1.77, t: 4.49 },
+          { z: -10.0, w: 1.30, b: 1.52, t: 4.73 },
+          { z: -8.1, w: 1.41, b: 1.37, t: 4.91 },
           { z: -5.8, w: mainWidth, b: bodyBottom, t: bodyTop },
           { z: half - .35, w: mainWidth, b: bodyBottom, t: bodyTop },
           { z: half, w: 1.34, b: bodyBottom, t: bodyTop }
@@ -998,17 +1102,31 @@
           { z: half, w: 1.34, b: bodyBottom, t: bodyTop }
         ];
       }
-      const pointsPerRing = 8;
+      const cornerSegments = 4;
+      const pointsPerRing = cornerSegments * 4;
       const vertices = [];
+      const uvs = [];
       const indices = [];
       for (const ring of rings) {
         const w = ring.w;
-        const r = Math.min(.22, w * .28);
-        const points = [
-          [-w + r, ring.b], [w - r, ring.b], [w, ring.b + r], [w, ring.t - r],
-          [w - r, ring.t], [-w + r, ring.t], [-w, ring.t - r], [-w, ring.b + r]
+        const r = Math.min(.25, w * .30, (ring.t - ring.b) * .20);
+        const corners = [
+          { x: w - r, y: ring.b + r, start: -Math.PI / 2 },
+          { x: w - r, y: ring.t - r, start: 0 },
+          { x: -w + r, y: ring.t - r, start: Math.PI / 2 },
+          { x: -w + r, y: ring.b + r, start: Math.PI }
         ];
-        for (const point of points) vertices.push(point[0], point[1], ring.z);
+        let pointIndex = 0;
+        for (const corner of corners) {
+          for (let step = 0; step < cornerSegments; step++) {
+            const angle = corner.start + (Math.PI / 2) * step / (cornerSegments - 1);
+            const x = corner.x + Math.cos(angle) * r;
+            const y = corner.y + Math.sin(angle) * r;
+            vertices.push(x, y, ring.z);
+            uvs.push((ring.z + half) / CAR_LENGTH, pointIndex / (pointsPerRing - 1));
+            pointIndex++;
+          }
+        }
       }
       for (let i = 0; i < rings.length - 1; i++) {
         for (let j = 0; j < pointsPerRing; j++) {
@@ -1026,6 +1144,7 @@
       }
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
       geometry.setIndex(indices);
       geometry.computeVertexNormals();
       return geometry;
@@ -1033,7 +1152,8 @@
 
     function createCoachShells(kind) {
       const baseColor = kind === 'iryo' ? '#e9e8e2' : '#e9e9e5';
-      const body = new THREE.MeshPhysicalMaterial({ color: baseColor, roughness: .28, metalness: .20, clearcoat: .7, clearcoatRoughness: .23 });
+      const paintTexture = makePaintTexture();
+      const body = new THREE.MeshPhysicalMaterial({ color: baseColor, map: paintTexture, roughness: .24, metalness: .18, clearcoat: .82, clearcoatRoughness: .16, envMapIntensity: .9 });
       const standardGeom = buildRingGeometry('standard');
       const frontGeom = buildRingGeometry('front');
       const rearGeom = buildRingGeometry('rear');
@@ -1076,9 +1196,15 @@
       const threshold = new THREE.Mesh(new THREE.BoxGeometry(.08, .10, .86), materials.doorEdge);
       threshold.position.set(x + side * .04, 1.39, z);
       parent.add(threshold);
+      const handle = new THREE.Mesh(new THREE.BoxGeometry(.026, .17, .035), materials.handle);
+      handle.position.set(x + side * .061, 2.35, z + .34);
+      parent.add(handle);
+      const doorIndicator = new THREE.Mesh(new THREE.BoxGeometry(.035, .11, .17), materials.doorIndicator);
+      doorIndicator.position.set(x + side * .056, 3.92, z);
+      parent.add(doorIndicator);
     }
 
-    function addBogie(parent, z, materials) {
+    function addBogie(parent, z, materials, wheelRotators) {
       const bogie = new THREE.Group();
       bogie.position.z = z;
       const frame = new THREE.Mesh(new THREE.BoxGeometry(2.46, .34, 3.35), materials.bogie);
@@ -1091,11 +1217,11 @@
       const beamB = beamA.clone();
       beamB.position.z = 1.26;
       bogie.add(beamB);
-      const axleGeom = new THREE.CylinderGeometry(.105, .105, 1.85, 12);
+      const axleGeom = materials.axleGeometry;
       const axleMat = materials.axle;
-      const wheelGeom = new THREE.CylinderGeometry(.42, .42, .22, 24, 1);
+      const wheelGeom = materials.wheelGeometry;
       const wheelMat = materials.wheel;
-      const discGeom = new THREE.CylinderGeometry(.255, .255, .255, 20, 1);
+      const discGeom = materials.discGeometry;
       const discMat = materials.disc;
       for (const wheelZ of [-1.02, 1.02]) {
         const axle = new THREE.Mesh(axleGeom, axleMat);
@@ -1103,24 +1229,40 @@
         axle.position.set(0, 1.12, wheelZ);
         bogie.add(axle);
         for (const side of [-1, 1]) {
+          const wheelRig = new THREE.Group();
+          wheelRig.position.set(side * 1.00, 1.12, wheelZ);
           const wheel = new THREE.Mesh(wheelGeom, wheelMat);
           wheel.rotation.z = Math.PI / 2;
-          wheel.position.set(side * 1.00, 1.12, wheelZ);
           wheel.castShadow = true;
-          bogie.add(wheel);
+          wheelRig.add(wheel);
           const disc = new THREE.Mesh(discGeom, discMat);
           disc.rotation.z = Math.PI / 2;
-          disc.position.set(side * 1.11, 1.12, wheelZ);
-          bogie.add(disc);
-          const hub = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, .27, 16), materials.hub);
+          disc.position.x = side * .11;
+          wheelRig.add(disc);
+          const hub = new THREE.Mesh(materials.hubGeometry, materials.hub);
           hub.rotation.z = Math.PI / 2;
-          hub.position.set(side * 1.18, 1.12, wheelZ);
-          bogie.add(hub);
+          hub.position.x = side * .18;
+          wheelRig.add(hub);
+          bogie.add(wheelRig);
+          wheelRotators.push(wheelRig);
+          const caliper = new THREE.Mesh(materials.caliperGeometry, materials.caliper);
+          caliper.position.set(side * 1.22, 1.11, wheelZ + .28);
+          bogie.add(caliper);
         }
       }
       const suspension = new THREE.Mesh(new THREE.BoxGeometry(2.12, .22, .82), materials.suspension);
       suspension.position.set(0, 1.27, 0);
       bogie.add(suspension);
+      for (const side of [-1, 1]) {
+        for (let coil = 0; coil < 4; coil++) {
+          const spring = new THREE.Mesh(materials.springGeometry, materials.spring);
+          spring.rotation.x = Math.PI / 2;
+          spring.position.set(side * .61, 1.02 + coil * .075, 0);
+          bogie.add(spring);
+        }
+        addCylinderBetween(bogie, [side * .79, .82, -.55], [side * .79, 1.29, -.27], .045, materials.shock, 8);
+        addCylinderBetween(bogie, [side * .79, .82, .55], [side * .79, 1.29, .27], .045, materials.shock, 8);
+      }
       parent.add(bogie);
     }
 
@@ -1149,34 +1291,66 @@
     }
 
     function addCabDetails(car, direction, materials, brand) {
-      const z = direction * (CAR_LENGTH / 2 + .055);
-      const windscreen = new THREE.Mesh(new THREE.PlaneGeometry(2.04, .91), materials.windshield);
-      windscreen.position.set(0, 4.04, z);
+      const noseZ = direction * (CAR_LENGTH / 2 + .035);
+      const maskShape = new THREE.Shape();
+      maskShape.moveTo(-.94, 3.12);
+      maskShape.lineTo(.94, 3.12);
+      maskShape.lineTo(.88, 4.06);
+      maskShape.quadraticCurveTo(.72, 4.23, 0, 4.24);
+      maskShape.quadraticCurveTo(-.72, 4.23, -.88, 4.06);
+      maskShape.closePath();
+      const mask = new THREE.Mesh(new THREE.ShapeGeometry(maskShape, 12), materials.cabMask);
+      mask.position.set(0, 0, direction * (CAR_LENGTH / 2 + .018));
+      if (direction < 0) mask.rotation.y = Math.PI;
+      car.add(mask);
+      const screenShape = new THREE.Shape();
+      screenShape.moveTo(-.86, 3.23);
+      screenShape.lineTo(.86, 3.23);
+      screenShape.lineTo(.79, 4.02);
+      screenShape.quadraticCurveTo(.68, 4.15, 0, 4.16);
+      screenShape.quadraticCurveTo(-.68, 4.15, -.79, 4.02);
+      screenShape.closePath();
+      const windscreen = new THREE.Mesh(new THREE.ShapeGeometry(screenShape, 12), materials.windshield);
+      windscreen.position.set(0, 0, noseZ);
       if (direction < 0) windscreen.rotation.y = Math.PI;
       car.add(windscreen);
+      const centerPost = new THREE.Mesh(new THREE.BoxGeometry(.026, .78, .025), materials.windshieldTrim);
+      centerPost.position.set(0, 3.64, noseZ + direction * .008);
+      car.add(centerPost);
       for (const side of [-1, 1]) {
-        const light = new THREE.Mesh(new THREE.SphereGeometry(.17, 16, 12), materials.headlamp);
-        light.scale.set(1.0, .62, .28);
-        light.position.set(side * .77, 2.24, direction * (CAR_LENGTH / 2 - .06));
+        const housing = new THREE.Mesh(new THREE.SphereGeometry(.21, 20, 14), materials.headlightHousing);
+        housing.scale.set(1.3, .62, .32);
+        housing.position.set(side * .69, 2.24, direction * (CAR_LENGTH / 2 - .02));
+        car.add(housing);
+        const light = new THREE.Mesh(new THREE.SphereGeometry(.135, 20, 14), materials.headlamp);
+        light.scale.set(1.15, .62, .34);
+        light.position.set(side * .69, 2.24, direction * (CAR_LENGTH / 2 + .02));
         car.add(light);
-        const marker = new THREE.Mesh(new THREE.SphereGeometry(.10, 12, 10), materials.markerLamp);
-        marker.position.set(side * .93, 1.78, direction * (CAR_LENGTH / 2 - .1));
+        const markerHousing = new THREE.Mesh(new THREE.SphereGeometry(.125, 16, 12), materials.headlightHousing);
+        markerHousing.scale.set(1.18, .62, .32);
+        markerHousing.position.set(side * .73, 1.78, direction * (CAR_LENGTH / 2 - .035));
+        car.add(markerHousing);
+        const marker = new THREE.Mesh(new THREE.SphereGeometry(.083, 16, 12), materials.markerLamp);
+        marker.scale.set(1.1, .75, .35);
+        marker.position.set(side * .73, 1.78, direction * (CAR_LENGTH / 2 + .005));
         car.add(marker);
       }
-      const noseBadge = new THREE.Mesh(new THREE.BoxGeometry(1.06, .16, .045), brand === 'iryo' ? materials.iryoStripe : materials.renfePurple);
-      noseBadge.position.set(0, 2.78, direction * (CAR_LENGTH / 2 - .12));
+      const noseBadge = new THREE.Mesh(new THREE.BoxGeometry(1.06, .13, .035), brand === 'iryo' ? materials.iryoStripe : materials.renfePurple);
+      noseBadge.position.set(0, 2.82, direction * (CAR_LENGTH / 2 + .006));
       car.add(noseBadge);
-      const wiperA = new THREE.Mesh(new THREE.BoxGeometry(.86, .025, .022), materials.wiper);
-      wiperA.position.set(-.37, 3.76, z + direction * .008);
+      const wiperA = new THREE.Mesh(new THREE.BoxGeometry(.78, .022, .018), materials.wiper);
+      wiperA.position.set(-.31, 3.34, noseZ + direction * .012);
+      wiperA.rotation.z = -.08;
       const wiperB = wiperA.clone();
-      wiperB.position.x = .37;
+      wiperB.position.x = .31;
+      wiperB.rotation.z = .08;
       car.add(wiperA, wiperB);
       const cabSkirt = new THREE.Mesh(new THREE.BoxGeometry(1.85, .28, .4), materials.skirt);
       cabSkirt.position.set(0, 1.37, direction * 11.62);
       car.add(cabSkirt);
       if (brand === 'renfe') {
-        const noseStripe = new THREE.Mesh(new THREE.BoxGeometry(1.48, .095, .04), materials.renfePink);
-        noseStripe.position.set(0, 2.54, direction * 11.99);
+        const noseStripe = new THREE.Mesh(new THREE.BoxGeometry(1.42, .075, .035), materials.renfePink);
+        noseStripe.position.set(0, 2.60, direction * (CAR_LENGTH / 2 + .014));
         car.add(noseStripe);
       }
     }
@@ -1191,7 +1365,9 @@
         glass: new THREE.MeshPhysicalMaterial({ color: '#0b1c26', roughness: .14, metalness: .42, clearcoat: 1, clearcoatRoughness: .08, emissive: '#07131a', emissiveIntensity: .18 }),
         glint: new THREE.MeshBasicMaterial({ color: '#b6c9c8', transparent: true, opacity: .34 }),
         door: new THREE.MeshStandardMaterial({ color: isIryo ? '#e3e1dc' : '#e6e6e3', roughness: .3, metalness: .16 }),
-        doorEdge: new THREE.MeshStandardMaterial({ color: isIryo ? '#8a2949' : '#623369', roughness: .38, metalness: .22 })
+        doorEdge: new THREE.MeshStandardMaterial({ color: isIryo ? '#8a2949' : '#623369', roughness: .38, metalness: .22 }),
+        handle: new THREE.MeshStandardMaterial({ color: '#a5aaa5', roughness: .28, metalness: .78 }),
+        doorIndicator: new THREE.MeshStandardMaterial({ color: '#dd9e4b', emissive: '#b77730', emissiveIntensity: .34, roughness: .28 })
       };
       const materials = {
         body: shellSet.body,
@@ -1212,12 +1388,32 @@
         pantograph: new THREE.MeshStandardMaterial({ color: '#505957', roughness: .4, metalness: .8 }),
         pantographBase: new THREE.MeshStandardMaterial({ color: '#59645f', roughness: .65, metalness: .35 }),
         pantographBow: new THREE.MeshStandardMaterial({ color: '#aab2a9', roughness: .3, metalness: .76 }),
-        windshield: new THREE.MeshPhysicalMaterial({ color: '#07131b', roughness: .13, metalness: .42, clearcoat: 1, clearcoatRoughness: .08, emissive: '#07131b', emissiveIntensity: .22, side: THREE.DoubleSide }),
+        windshield: new THREE.MeshPhysicalMaterial({ color: '#07131b', roughness: .11, metalness: .38, clearcoat: 1, clearcoatRoughness: .05, emissive: '#07131b', emissiveIntensity: .18, side: THREE.DoubleSide, envMapIntensity: 1.15 }),
+        windshieldTrim: new THREE.MeshStandardMaterial({ color: '#293638', roughness: .3, metalness: .45 }),
+        cabMask: new THREE.MeshPhysicalMaterial({ color: '#222b2d', roughness: .17, metalness: .3, clearcoat: .9, clearcoatRoughness: .08, envMapIntensity: 1.0, side: THREE.DoubleSide }),
+        headlightHousing: new THREE.MeshPhysicalMaterial({ color: '#343b3b', roughness: .24, metalness: .62, clearcoat: .72 }),
         headlamp: new THREE.MeshStandardMaterial({ color: '#fff2d7', emissive: '#ffe9bd', emissiveIntensity: 1.35, roughness: .17, metalness: .08 }),
         markerLamp: new THREE.MeshStandardMaterial({ color: isIryo ? '#e83f51' : '#d84757', emissive: '#d9474d', emissiveIntensity: .75, roughness: .18 }),
         wiper: new THREE.MeshStandardMaterial({ color: '#202829', roughness: .45, metalness: .3 }),
         skirt: new THREE.MeshStandardMaterial({ color: '#343b3b', roughness: .63, metalness: .26 }),
         underbody: new THREE.MeshStandardMaterial({ color: '#414847', roughness: .78, metalness: .24 }),
+        conduit: new THREE.MeshStandardMaterial({ color: '#59615e', roughness: .62, metalness: .56 }),
+        airTank: new THREE.MeshStandardMaterial({ color: '#58605d', roughness: .48, metalness: .62 }),
+        spring: new THREE.MeshStandardMaterial({ color: '#626b67', roughness: .4, metalness: .72 }),
+        shock: new THREE.MeshStandardMaterial({ color: '#777f7a', roughness: .38, metalness: .74 }),
+        caliper: new THREE.MeshStandardMaterial({ color: '#343b3a', roughness: .56, metalness: .42 }),
+        bellows: new THREE.MeshStandardMaterial({ color: '#343a3a', roughness: .86, metalness: .08 }),
+        bellowsRib: new THREE.MeshStandardMaterial({ color: '#535a58', roughness: .76, metalness: .1 }),
+        axleGeometry: new THREE.CylinderGeometry(.105, .105, 1.85, 16),
+        wheelGeometry: new THREE.LatheGeometry([
+          new THREE.Vector2(.275, -.13), new THREE.Vector2(.33, -.125), new THREE.Vector2(.39, -.092),
+          new THREE.Vector2(.418, -.052), new THREE.Vector2(.425, -.016), new THREE.Vector2(.425, .04),
+          new THREE.Vector2(.407, .079), new THREE.Vector2(.368, .108), new THREE.Vector2(.305, .13)
+        ], 36),
+        discGeometry: new THREE.CylinderGeometry(.255, .255, .255, 24, 1),
+        hubGeometry: new THREE.CylinderGeometry(.12, .12, .27, 20),
+        caliperGeometry: new THREE.BoxGeometry(.18, .48, .35),
+        springGeometry: new THREE.TorusGeometry(.15, .022, 7, 16),
         iryoStripe: new THREE.MeshStandardMaterial({ color: '#ae254b', roughness: .28, metalness: .23 }),
         iryoDeep: new THREE.MeshStandardMaterial({ color: '#76223f', roughness: .32, metalness: .22 }),
         renfePurple: new THREE.MeshStandardMaterial({ color: '#63306e', roughness: .3, metalness: .22 }),
@@ -1225,10 +1421,11 @@
         line: new THREE.MeshStandardMaterial({ color: isIryo ? '#77746f' : '#7e7d7b', roughness: .56, metalness: .45 })
       };
       const stripeTexture = makeLiveryTexture(kind);
-      const stripeMaterial = new THREE.MeshBasicMaterial({ map: stripeTexture, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+      const stripeMaterial = new THREE.MeshStandardMaterial({ map: stripeTexture, transparent: true, depthWrite: false, side: THREE.DoubleSide, roughness: .32, metalness: .08, envMapIntensity: .45 });
       const logoTexture = makeLogoTexture(kind);
-      const logoMaterial = new THREE.MeshBasicMaterial({ map: logoTexture, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+      const logoMaterial = new THREE.MeshStandardMaterial({ map: logoTexture, transparent: true, depthWrite: false, side: THREE.DoubleSide, roughness: .34, metalness: .04, envMapIntensity: .35 });
       const cars = [];
+      const wheelRotators = [];
       const windowOffsets = [-9.25, -6.65, -4.05, -1.45, 1.45, 4.05, 6.65, 9.25];
       const sideSign = [-1, 1];
       for (let i = 0; i < TRAIN_CAR_COUNT; i++) {
@@ -1300,13 +1497,38 @@
         car.add(underA);
         const underB = underA.clone(); underB.scale.set(.78, .82, .76); underB.position.set(0, 1.18, -4.3); car.add(underB);
         const underC = underB.clone(); underC.position.z = 4.3; car.add(underC);
-        addBogie(car, -7.45, materials);
-        addBogie(car, 7.45, materials);
+        const tankGeometry = new THREE.CylinderGeometry(.18, .18, 1.45, 16, 1);
+        for (const side of sideSign) {
+          const conduit = new THREE.Mesh(new THREE.BoxGeometry(.08, .08, 7.8), materials.conduit);
+          conduit.position.set(side * 1.12, .84, 0);
+          car.add(conduit);
+          for (const z of [-4.8, 4.8]) {
+            const equipmentPanel = new THREE.Mesh(new THREE.BoxGeometry(.22, .42, 1.5), materials.underbody);
+            equipmentPanel.position.set(side * 1.12, 1.08, z);
+            car.add(equipmentPanel);
+          }
+          const airTank = new THREE.Mesh(tankGeometry, materials.airTank);
+          airTank.rotation.x = Math.PI / 2;
+          airTank.position.set(side * .55, .98, 0);
+          car.add(airTank);
+        }
+        addBogie(car, -7.45, materials, wheelRotators);
+        addBogie(car, 7.45, materials, wheelRotators);
         if (i === 2 || i === 5) addPantograph(car, i === 2 ? -1.5 : 1.2, materials);
-        // Inter-car coupler ends are visible through the articulated gaps.
+        // Flexible gangways and close couplers fill the narrow articulated gaps.
         const coupler = new THREE.Mesh(new THREE.BoxGeometry(.32, .22, .55), materials.bogieEdge);
         coupler.position.set(0, 1.17, CAR_LENGTH / 2 + .12);
         car.add(coupler);
+        if (i < TRAIN_CAR_COUNT - 1) {
+          const bellows = new THREE.Mesh(new THREE.BoxGeometry(2.06, 2.78, .16), materials.bellows);
+          bellows.position.set(0, 2.90, CAR_LENGTH / 2 + .285);
+          car.add(bellows);
+          for (let rib = 0; rib < 7; rib++) {
+            const fold = new THREE.Mesh(new THREE.BoxGeometry(2.02, .028, .025), materials.bellowsRib);
+            fold.position.set(0, 1.72 + rib * .37, CAR_LENGTH / 2 + .37);
+            car.add(fold);
+          }
+        }
         if (frontCab) addCabDetails(car, 1, materials, kind);
         if (rearCab) addCabDetails(car, -1, materials, kind);
         cars.push(car);
@@ -1317,7 +1539,7 @@
       const label = spriteFromCanvas(labelTexture, 38, 7.35, new THREE.Vector3(0, 10.1, 0), root, state.labels ? 1 : 0);
       label.name = 'Train identification label';
       scene.add(root);
-      const train = { kind, root, cars, label, startZ: isIryo ? IRYO_Z : RENFE_START_Z, contactZ: isIryo ? IRYO_Z : RENFE_CONTACT_Z };
+      const train = { kind, root, cars, label, wheelRotators, startZ: isIryo ? IRYO_Z : RENFE_START_Z, contactZ: isIryo ? IRYO_Z : RENFE_CONTACT_Z };
       return train;
     }
 
@@ -1341,6 +1563,12 @@
       scene = new THREE.Scene();
       scene.background = new THREE.Color('#c5d1d0');
       scene.fog = new THREE.Fog('#c5d1d0', 420, 1760);
+      try {
+        scene.environment = makeEnvironmentCube();
+        scene.environmentIntensity = .72;
+      } catch (environmentError) {
+        console.warn('Procedural environment reflections unavailable; continuing with direct lighting.', environmentError);
+      }
       const sky = new THREE.Mesh(new THREE.SphereGeometry(1850, 32, 18), new THREE.MeshBasicMaterial({ color: '#c9d7d6', side: THREE.BackSide }));
       sky.position.y = 200;
       scene.add(sky);
@@ -1426,6 +1654,9 @@
         car.rotation.z = derailment * (lead ? .15 : .035 * Math.sin(i * 1.2));
         if (lead) car.position.z += derailment * 1.4;
       }
+      const wheelAngle = -(renfeZ - RENFE_START_Z) / .425;
+      for (const wheel of iryo.wheelRotators) wheel.rotation.x = 0;
+      for (const wheel of renfe.wheelRotators) wheel.rotation.x = wheelAngle;
       iryo.label.visible = state.labels;
       renfe.label.visible = state.labels;
       world.infrastructure.visible = state.infrastructure;
@@ -1462,8 +1693,8 @@
         target = new THREE.Vector3(1.8, 2.4, followZ);
         position = target.clone().add(new THREE.Vector3(29 / zoom, 6.8 / zoom, -31 / zoom));
       } else if (state.cameraMode === 'front') {
-        target = new THREE.Vector3(4.5, 2.9, rz + 76);
-        position = new THREE.Vector3(4.5, 4.35, rz + 148 / zoom);
+        target = new THREE.Vector3(0, 2.9, rz + 76);
+        position = new THREE.Vector3(0, 4.35, rz + 148 / zoom);
       } else if (state.cameraMode === 'side') {
         target = new THREE.Vector3(1.5, 2.5, focusZ);
         position = target.clone().add(new THREE.Vector3(96 / zoom, 14 / zoom, 56 / zoom));
@@ -1780,6 +2011,8 @@
       });
       $('zoomIn').addEventListener('click', () => changeZoom(.86));
       $('zoomOut').addEventListener('click', () => changeZoom(1.16));
+      $('hideUiButton').addEventListener('click', () => setUIHidden(true));
+      $('restoreUiButton').addEventListener('click', () => setUIHidden(false));
       $('fullscreenButton').addEventListener('click', toggleFullscreen);
       document.addEventListener('fullscreenchange', () => {
         const active = Boolean(document.fullscreenElement);
@@ -1825,6 +2058,16 @@
         const active = document.activeElement;
         const tag = active && active.tagName ? active.tagName.toLowerCase() : '';
         if (tag === 'input' || tag === 'select' || tag === 'textarea' || (active && active.isContentEditable)) return;
+        if (event.key === 'Escape' && state.uiHidden) {
+          event.preventDefault();
+          setUIHidden(false);
+          return;
+        }
+        if (event.key.toLowerCase() === 'h') {
+          event.preventDefault();
+          setUIHidden(!state.uiHidden);
+          return;
+        }
         if (event.code === 'Space') { event.preventDefault(); playButton.click(); }
         if (event.key.toLowerCase() === 'r') $('restartButton').click();
         if (event.key.toLowerCase() === 'f') toggleFullscreen();
