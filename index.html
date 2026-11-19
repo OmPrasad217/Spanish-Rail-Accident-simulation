@@ -516,9 +516,9 @@
       const post2=new THREE.Group(),mast2=new THREE.Mesh(new THREE.BoxGeometry(.12,3,.12),poleMat);mast2.position.y=1.5;post2.add(mast2);sprite(makeSignTexture('E242','ENTRY SIGNAL · SCHEMATIC'),8.2,2.2,new THREE.Vector3(0,5.1,0),post2);post2.position.set(-4,terrainHeight(-4,IRYO_Z+105),IRYO_Z+105);group.add(post2);addLZBInfrastructure(group);scene.add(group);world.infrastructure=group;
     }
 
-    function buildCoachGeometry(type,kind='renfe'){
-      const half=CAR_LENGTH/2,W=1.435,b0=1.34,t0=4.98,iryo=kind==='iryo';let rings;
-      const frontRings=iryo?[
+    function cabNoseProfile(kind){
+      const half=CAR_LENGTH/2,W=1.435,b0=1.34,t0=4.98;
+      return kind==='iryo'?[
         {z:-half,w:1.34,b:b0,t:t0},{z:-half+.35,w:W,b:b0,t:t0},{z:4.1,w:W,b:b0,t:t0},
         {z:6.0,w:1.38,b:1.39,t:4.88},{z:7.8,w:1.17,b:1.59,t:4.66},{z:9.2,w:.94,b:1.83,t:4.40},
         {z:10.3,w:.68,b:2.06,t:4.13},{z:11.15,w:.43,b:2.31,t:3.82},{z:half,w:.035,b:2.64,t:3.00}
@@ -527,6 +527,9 @@
         {z:6.8,w:1.39,b:1.39,t:4.89},{z:8.3,w:1.19,b:1.60,t:4.68},{z:9.65,w:.96,b:1.84,t:4.43},
         {z:10.7,w:.72,b:2.08,t:4.16},{z:11.45,w:.48,b:2.32,t:3.82},{z:half,w:.045,b:2.62,t:3.02}
       ];
+    }
+    function buildCoachGeometry(type,kind='renfe'){
+      const half=CAR_LENGTH/2,W=1.435,b0=1.34,t0=4.98,frontRings=cabNoseProfile(kind);let rings;
       if(type==='front')rings=frontRings;
       else if(type==='rear')rings=frontRings.slice().reverse().map(r=>({...r,z:-r.z}));
       else rings=[{z:-half,w:1.34,b:b0,t:t0},{z:-half+.3,w:W,b:b0,t:t0},{z:half-.3,w:W,b:b0,t:t0},{z:half,w:1.34,b:b0,t:t0}];
@@ -542,35 +545,70 @@
       for(const wz of [-1.02,1.02]){const axle=new THREE.Mesh(mats.axleGeometry,mats.axle);axle.rotation.z=Math.PI/2;axle.position.set(0,1.12,wz);bogie.add(axle);for(const side of [-1,1]){const rig=new THREE.Group();rig.position.set(side,1.12,wz);const wheel=new THREE.Mesh(mats.wheelGeometry,mats.wheel);wheel.rotation.z=Math.PI/2;wheel.castShadow=true;rig.add(wheel);const disc=new THREE.Mesh(mats.discGeometry,mats.disc);disc.rotation.z=Math.PI/2;disc.position.x=side*.11;rig.add(disc);const hub=new THREE.Mesh(mats.hubGeometry,mats.hub);hub.rotation.z=Math.PI/2;hub.position.x=side*.18;rig.add(hub);bogie.add(rig);wheelRefs.push(rig);const caliper=new THREE.Mesh(mats.caliperGeometry,mats.caliper);caliper.position.set(side*1.23,1.1,wz+.28);bogie.add(caliper);}}
       const suspension=new THREE.Mesh(new THREE.BoxGeometry(2.08,.20,.86),mats.suspension);suspension.position.set(0,1.26,0);bogie.add(suspension);for(const side of [-1,1]){for(let i=0;i<4;i++){const spring=new THREE.Mesh(mats.springGeometry,mats.spring);spring.rotation.x=Math.PI/2;spring.position.set(side*.61,1.02+i*.075,0);bogie.add(spring);}cylinderBetween(bogie,[side*.78,.82,-.55],[side*.78,1.28,-.27],.045,mats.shock,8);cylinderBetween(bogie,[side*.78,.82,.55],[side*.78,1.28,.27],.045,mats.shock,8);}parent.add(bogie);}
     function addPantograph(parent,z,mats){const p=new THREE.Group();p.position.z=z;for(const x of [-.55,.55]){const foot=new THREE.Mesh(new THREE.BoxGeometry(.36,.1,.34),mats.pantBase);foot.position.set(x,5.05,0);p.add(foot);}const joints=[[-.55,5.12,0],[.55,5.12,0],[-.22,5.44,0],[.22,5.44,0],[-.52,5.82,0],[.52,5.82,0]];cylinderBetween(p,joints[0],joints[3],.043,mats.pant,6);cylinderBetween(p,joints[1],joints[2],.043,mats.pant,6);cylinderBetween(p,joints[2],joints[4],.038,mats.pant,6);cylinderBetween(p,joints[3],joints[5],.038,mats.pant,6);const bow=new THREE.Mesh(new THREE.BoxGeometry(1.34,.05,.12),mats.pantBow);bow.position.set(0,5.84,0);p.add(bow);parent.add(p);}
-    function addSweptPanel(parent,shape,material,y,z,direction,tilt,forwardOffset=0){
-      const geometry=new THREE.ShapeGeometry(shape,16),position=geometry.attributes.position,slope=Math.tan(tilt);
-      for(let i=0;i<position.count;i++)position.setZ(i,-slope*position.getY(i));
-      position.needsUpdate=true;geometry.computeVertexNormals();const mesh=new THREE.Mesh(geometry,material);mesh.position.set(0,y,direction*(z+forwardOffset));if(direction<0)mesh.rotation.y=Math.PI;mesh.renderOrder=4;parent.add(mesh);return mesh;
+    function cabSectionAt(z,profile){
+      if(z<=profile[0].z)return profile[0];
+      for(let i=0;i<profile.length-1;i++)if(z<=profile[i+1].z){const a=profile[i],b=profile[i+1],u=(z-a.z)/(b.z-a.z);return{w:lerp(a.w,b.w,u),b:lerp(a.b,b.b,u),t:lerp(a.t,b.t,u)};}
+      return profile[profile.length-1];
+    }
+    function cabContainsPoint(x,y,z,profile){
+      const q=cabSectionAt(z,profile),r=Math.min(.24,q.w*.29,(q.t-q.b)*.2),ax=Math.abs(x);
+      if(ax>q.w||y<q.b||y>q.t)return false;
+      const cx=clamp(ax,0,q.w-r),cy=clamp(y,q.b+r,q.t-r),dx=ax-cx,dy=y-cy;
+      return dx*dx+dy*dy<=r*r+.00002;
+    }
+    function cabSurfaceZ(x,y,profile){
+      const minZ=profile[0].z,maxZ=profile[profile.length-1].z,step=.045;
+      for(let z=maxZ;z>=minZ;z-=step){
+        if(!cabContainsPoint(x,y,z,profile))continue;
+        let inside=z,outside=Math.min(maxZ,z+step);
+        if(cabContainsPoint(x,y,outside,profile))return outside;
+        for(let n=0;n<11;n++){const mid=(inside+outside)/2;if(cabContainsPoint(x,y,mid,profile))inside=mid;else outside=mid;}
+        return inside;
+      }
+      return null;
+    }
+    function addCabPanel(parent,shape,material,centerY,direction,profile,forwardOffset=0,renderOrder=5){
+      const geometry=new THREE.ShapeGeometry(shape,18),position=geometry.attributes.position;
+      for(let i=0;i<position.count;i++){
+        const surface=cabSurfaceZ(position.getX(i),centerY+position.getY(i),profile);
+        position.setZ(i,(surface===null?profile[profile.length-1].z:surface)+forwardOffset);
+      }
+      position.needsUpdate=true;geometry.computeVertexNormals();const mesh=new THREE.Mesh(geometry,material);mesh.position.y=centerY;if(direction<0)mesh.rotation.y=Math.PI;mesh.renderOrder=renderOrder;parent.add(mesh);return mesh;
     }
     function cabWindowShape(bottomHalf,topHalf,bottomY,topY,arch){const shape=new THREE.Shape();shape.moveTo(-bottomHalf,bottomY);shape.lineTo(bottomHalf,bottomY);shape.lineTo(topHalf,topY);shape.quadraticCurveTo(topHalf*.82,topY+arch,0,topY+arch);shape.quadraticCurveTo(-topHalf*.82,topY+arch,-topHalf,topY);shape.closePath();return shape;}
     function makeTrainLabel(kind){const iryo=kind==='iryo',c=document.createElement('canvas');c.width=760;c.height=136;const x=c.getContext('2d');x.fillStyle='rgba(5,13,18,.92)';x.beginPath();x.roundRect(2,2,756,132,18);x.fill();x.strokeStyle='rgba(238,242,237,.25)';x.lineWidth=2;x.stroke();x.fillStyle=iryo?'#d04a6a':'#bd9be9';x.fillRect(2,2,9,132);x.fillStyle='#f5f5ee';x.font='700 36px Arial';x.fillText(iryo?'IRYO 6076':'RENFE AVE 2080',30,57);x.fillStyle='rgba(223,232,227,.7)';x.font='500 20px Arial';x.fillText(iryo?'HITACHI ETR1000 · 8 CARS':'SIEMENS 103.006 · 8 CARS',31,96);return canvasTexture(c);}
     function addCab(car,direction,mats,kind){
-      const iryo=kind==='iryo',windowY=3.84,windowZ=iryo?11.02:11.08,tilt=iryo?.84:.88;
+      const iryo=kind==='iryo',profile=cabNoseProfile(kind),windowY=4.05;
       if(iryo){
-        const noseField=new THREE.Shape();noseField.moveTo(-.16,-.49);noseField.lineTo(.16,-.49);noseField.quadraticCurveTo(.34,-.27,.43,.04);noseField.lineTo(.51,.35);noseField.quadraticCurveTo(.52,.45,.43,.49);noseField.quadraticCurveTo(0,.58,-.43,.49);noseField.quadraticCurveTo(-.52,.45,-.51,.35);noseField.lineTo(-.43,.04);noseField.quadraticCurveTo(-.34,-.27,-.16,-.49);noseField.closePath();
-        addSweptPanel(car,noseField,mats.noseRed,3.76,11.00,direction,.84,.075);
+        const redNose=cabWindowShape(.22,.96,-.50,.43,.12);
+        addCabPanel(car,redNose,mats.noseRed,windowY,direction,profile,.035,3);
         const silverLip=new THREE.Shape();silverLip.moveTo(-.31,-.035);silverLip.lineTo(.31,-.035);silverLip.lineTo(.29,.025);silverLip.quadraticCurveTo(0,.055,-.29,.025);silverLip.closePath();
-        addSweptPanel(car,silverLip,mats.chrome,2.72,11.76,direction,.58,.085);
+        addCabPanel(car,silverLip,mats.chrome,2.72,direction,profile,.07,4);
       }else{
-        const forehead=new THREE.Shape();forehead.moveTo(-.50,-.035);forehead.lineTo(.50,-.035);forehead.lineTo(.45,.035);forehead.quadraticCurveTo(0,.075,-.45,.035);forehead.closePath();
-        addSweptPanel(car,forehead,mats.purple,4.14,10.47,direction,.80,.075);
+        const brow=new THREE.Shape();brow.moveTo(-.76,.34);brow.lineTo(.76,.34);brow.lineTo(.69,.42);brow.quadraticCurveTo(0,.47,-.69,.42);brow.closePath();
+        addCabPanel(car,brow,mats.purple,windowY,direction,profile,.04,3);
         const lowerStripe=new THREE.Shape();lowerStripe.moveTo(-.31,-.035);lowerStripe.lineTo(.31,-.035);lowerStripe.lineTo(.28,.025);lowerStripe.quadraticCurveTo(0,.05,-.28,.025);lowerStripe.closePath();
-        addSweptPanel(car,lowerStripe,mats.pink,2.78,11.70,direction,.62,.07);
+        addCabPanel(car,lowerStripe,mats.pink,2.78,direction,profile,.07,4);
         const goldLine=new THREE.Shape();goldLine.moveTo(-.27,-.018);goldLine.lineTo(.27,-.018);goldLine.lineTo(.25,.018);goldLine.quadraticCurveTo(0,.034,-.25,.018);goldLine.closePath();
-        addSweptPanel(car,goldLine,mats.frontGold,2.69,11.76,direction,.58,.09);
+        addCabPanel(car,goldLine,mats.frontGold,2.69,direction,profile,.09,5);
       }
-      const maskShape=cabWindowShape(iryo?.49:.61,iryo?.41:.53,-.22,-.24,iryo?.09:.10);
-      const glassShape=cabWindowShape(iryo?.42:.54,iryo?.34:.45,-.17,-.18,iryo?.07:.08);
-      addSweptPanel(car,maskShape,mats.mask,windowY,windowZ,direction,tilt,.075);
-      addSweptPanel(car,glassShape,mats.windshield,windowY,windowZ,direction,tilt,.105);
-      const divider=new THREE.Shape();divider.moveTo(-.012,-.17);divider.lineTo(.012,-.17);divider.lineTo(.012,.22);divider.lineTo(-.012,.22);divider.closePath();
-      addSweptPanel(car,divider,mats.windowTrim,windowY,windowZ,direction,tilt,.116);
+      const maskShape=cabWindowShape(iryo?.28:.31,iryo?.84:.82,-.40,.39,.09);
+      const glassShape=cabWindowShape(iryo?.22:.25,iryo?.72:.70,-.33,.32,.075);
+      addCabPanel(car,maskShape,mats.mask,windowY,direction,profile,.065,5);
+      addCabPanel(car,glassShape,mats.windshield,windowY,direction,profile,.095,6);
+      const divider=new THREE.Shape();divider.moveTo(-.014,-.32);divider.lineTo(.014,-.32);divider.lineTo(.014,.39);divider.lineTo(-.014,.39);divider.closePath();
+      addCabPanel(car,divider,mats.windowTrim,windowY,direction,profile,.11,7);
+      const reflection=new THREE.Shape();reflection.moveTo(-.34,-.08);reflection.lineTo(-.25,-.08);reflection.lineTo(-.25,.29);reflection.lineTo(-.34,.29);reflection.closePath();
+      addCabPanel(car,reflection,mats.glint,windowY,direction,profile,.125,8);
       for(const side of [-1,1]){
+        const wiper=new THREE.Shape();wiper.moveTo(side*.27,-.18);wiper.lineTo(side*.08,-.045);wiper.lineTo(side*.08,-.020);wiper.lineTo(side*.27,-.155);wiper.closePath();
+        addCabPanel(car,wiper,mats.wiper,windowY,direction,profile,.13,9);
+      }
+      const sideZ=iryo?6.95:7.20,sideX=cabSectionAt(sideZ,profile).w-.03;
+      for(const side of [-1,1]){
+        const surround=new THREE.Mesh(new THREE.BoxGeometry(.065,.66,.98),mats.mask);surround.position.set(side*(sideX+.012),4.36,direction*sideZ);car.add(surround);
+        const sideGlass=new THREE.Mesh(new THREE.BoxGeometry(.075,.52,.80),mats.glass);sideGlass.position.set(side*(sideX+.045),4.36,direction*sideZ);car.add(sideGlass);
+        const sideGlint=new THREE.Mesh(new THREE.BoxGeometry(.078,.025,.55),mats.glint);sideGlint.position.set(side*(sideX+.085),4.52,direction*(sideZ-.04));car.add(sideGlint);
         const housing=new THREE.Mesh(new THREE.SphereGeometry(.145,18,12),mats.headHousing);housing.scale.set(iryo?1.42:1.56,.57,.32);housing.position.set(side*(iryo?.25:.28),iryo?2.87:2.82,direction*11.77);car.add(housing);
         const lamp=new THREE.Mesh(new THREE.SphereGeometry(.105,18,12),mats.headlamp);lamp.scale.set(iryo?1.58:1.45,.48,.26);lamp.position.set(side*(iryo?.25:.28),iryo?2.87:2.82,direction*11.85);car.add(lamp);
       }
